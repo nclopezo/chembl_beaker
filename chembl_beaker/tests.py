@@ -6,12 +6,14 @@ import chembl_beaker
 from chembl_beaker.run_beaker import app as beaker
 import base64
 from webtest import TestApp
+import sys, traceback
 
 #-----------------------------------------------------------------------------------------------------------------------
 
 class TestServer(unittest.TestCase):
 
     def setUp(self):
+        bottle.debug(True)
         self.app = TestApp(beaker)
         dir = os.path.dirname(chembl_beaker.__file__)
         f = open(os.path.join(dir, 'samples', 'sample.sdf'))
@@ -50,6 +52,18 @@ class TestServer(unittest.TestCase):
         self.assertEqual(r.status_int, 200)
         self.assertEqual(r.content_type, 'application/json')
         r.mustcontain('M96.3780274809,109.985416295L83.8772809167,130.335345966')
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+    def test_ctab2xyz(self):
+        r = self.app.post("/ctab2xyz", self.sample_mol_data)
+        self.assertEqual(r.status_int, 200)
+        # it must containt the number of atoms of each of the molecules in the mol data
+        # followed by an empty line
+        r.mustcontain("40\n\n")
+        r.mustcontain("37\n\n")
+        r.mustcontain("36\n\n")
+        r.mustcontain("60\n\n")
 
 #-----------------------------------------------------------------------------------------------------------------------
 

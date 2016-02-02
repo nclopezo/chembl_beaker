@@ -13,6 +13,8 @@ from rdkit.Chem import SDWriter
 from rdkit.Chem import SmilesWriter
 from rdkit.Chem import SanitizeMol
 from rdkit.Chem import SanitizeFlags as sf
+from rdkit.Chem import MolToMolBlock
+from rdkit.Chem.AllChem import EmbedMolecule
 from chembl_beaker.beaker.utils.functional import _apply, _call
 from chembl_beaker.beaker.utils.chemical_transformation import _computeCoords
 
@@ -104,3 +106,30 @@ def _getSMARTSString(mols, isomericSmiles=False):
     return sio.getvalue()
 
 #-----------------------------------------------------------------------------------------------------------------------
+
+def _getXYZ(mols):
+
+    sio = StringIO.StringIO()
+
+    for mol in mols:
+
+        from chembl_beaker.beaker.core_apps.D3Coords.impl import _2D23D
+        molH = _2D23D(mol, None)
+
+        atoms = molH.GetAtoms()
+        sio.write(str(len(atoms)) + '\n')
+        sio.write('\n')
+
+        i = 0
+        for conf in molH.GetConformers():
+
+            for j in range(0, conf.GetNumAtoms()):
+
+                sio.write(atoms[i].GetSymbol() +
+                          '\t' + str(conf.GetAtomPosition(j).x) +
+                          '\t' + str(conf.GetAtomPosition(j).y) +
+                          '\t' + str(conf.GetAtomPosition(j).z)
+                          + '\n')
+                i += 1
+
+    return sio.getvalue()
